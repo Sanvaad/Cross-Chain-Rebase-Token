@@ -1,66 +1,140 @@
-## Foundry
+---
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+# RebaseToken Smart Contract
 
-Foundry consists of:
+This repository contains the **RebaseToken** smart contract, an ERC20-compliant token with automated supply adjustments (rebasing). Built using **Solidity** and tested with **Foundry**, this contract dynamically changes the token supply based on predefined logic.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## 📌 Features
 
-## Documentation
+- **ERC20 Compliance** – Standard token functionality.
+- **Rebasing Mechanism** – Adjusts total supply periodically.
+- **Admin-Controlled Rebase** – Only the owner can trigger rebases.
+- **Burn & Mint Mechanism** – Ensures supply elasticity.
 
-https://book.getfoundry.sh/
+---
 
-## Usage
+## 🚀 Installation & Setup (Foundry)
 
-### Build
+To set up your Foundry environment and compile the contract, follow these steps:
 
-```shell
-$ forge build
+### 1️⃣ Install Foundry
+
+If you haven't installed Foundry yet, run:
+
+```sh
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
 ```
 
-### Test
+### 2️⃣ Clone the Repository
 
-```shell
-$ forge test
+```sh
+git clone https://github.com/yourusername/RebaseToken.git
+cd RebaseToken
 ```
 
-### Format
+### 3️⃣ Install Dependencies
 
-```shell
-$ forge fmt
+```sh
+forge install
 ```
 
-### Gas Snapshots
+### 4️⃣ Compile the Contract
 
-```shell
-$ forge snapshot
+```sh
+forge build
 ```
 
-### Anvil
+### 5️⃣ Run Tests
 
-```shell
-$ anvil
+```sh
+forge test
 ```
 
-### Deploy
+To see detailed logs:
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+```sh
+forge test -vvvv
 ```
 
-### Cast
+---
 
-```shell
-$ cast <subcommand>
+## 📜 Smart Contract Overview
+
+### **RebaseToken.sol**
+
+The **RebaseToken** contract is an ERC20 token that implements a rebasing mechanism. Key functionalities:
+
+- **Constructor:** Initializes the token with a name, symbol, and initial supply.
+- **Rebase Function:** Adjusts the total supply based on a multiplier.
+- **Owner-Only Functions:** Secure access to rebasing.
+- **Event Emissions:** Logs rebases for transparency.
+
+---
+
+## 🛠️ How Rebasing Works
+
+The **rebase()** function modifies the token supply dynamically:
+
+```solidity
+function rebase(uint256 percentage) external onlyOwner {
+    require(percentage > 0, "Percentage must be greater than zero");
+
+    uint256 newSupply = (totalSupply() * (100 + percentage)) / 100;
+    
+    if (newSupply > totalSupply()) {
+        uint256 mintAmount = newSupply - totalSupply();
+        _mint(owner(), mintAmount);
+    } else {
+        uint256 burnAmount = totalSupply() - newSupply;
+        _burn(owner(), burnAmount);
+    }
+
+    emit Rebase(block.timestamp, newSupply);
+}
 ```
 
-### Help
+📌 **Key Mechanisms:**
+- If `percentage` is **positive**, new tokens are minted.
+- If `percentage` is **negative**, tokens are burned.
+- `Rebase` events are emitted for tracking.
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+---
+
+## ✅ Running a Local Node
+
+To test on a local blockchain:
+
+```sh
+anvil
 ```
+
+Then deploy using:
+
+```sh
+forge script script/Deploy.s.sol:Deploy --fork-url http://localhost:8545 --broadcast
+```
+
+---
+
+## 🔗 Deployment (Optional)
+
+If deploying to **Ethereum**, **Polygon**, or **Arbitrum**, configure Foundry with RPC:
+
+```sh
+export ETH_RPC_URL="https://mainnet.infura.io/v3/YOUR_INFURA_KEY"
+```
+
+Deploy with:
+
+```sh
+forge script script/Deploy.s.sol:Deploy --rpc-url $ETH_RPC_URL --broadcast --verify
+```
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
